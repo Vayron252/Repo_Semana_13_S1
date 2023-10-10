@@ -26,40 +26,89 @@
 const elementoContainer = document.getElementById('app');
 const combo = document.getElementById('cboCampo');
 const btnMostrar = document.getElementById('btnMostrar');
+const contenedorCombos = document.querySelector('.combos');
 
-const LeerUsuarios = async () => {
+const leerUsuarios = async () => {
     const response = await fetch('https://jsonplaceholder.typicode.com/users');
     const data = await response.json();
     return data;
 }
 
-const LLenarComboCampos = async () => {
-    const usuarios = await LeerUsuarios();
+const crearComboDinamico = async (valorDinamico) => {
+    const usuarios = await leerUsuarios();
+    const {[valorDinamico]: valor} = usuarios[0];
+    contenedorCombos.innerHTML = '';
+    if (typeof valor === 'string') {
+        return;
+    }
+    let campos = Object.keys(valor);
+    if (campos.length > 0) {
+        const template = '<select class="form-select mt-2">' + campos.map(valor => {
+            return `<option value='${valor}'>${valor}</option>`;
+        }).join('') + '</select>';
+        contenedorCombos.innerHTML = template;
+    }
+}
+
+// crearComboDinamico('address');
+
+const llenarComboCampos = async () => {
+    const usuarios = await leerUsuarios();
     let campos = Object.keys(usuarios[0]);
-    let contador = -1;
+    // let contador = -1;
     const template = campos.map(valor => {
-        contador += 1;
-        return `<option value='${contador}'>${valor}</option>`;
+        // contador += 1;
+        return `<option value='${valor}'>${valor}</option>`;
     }).join('');
     combo.innerHTML = template;
 }
 
-LLenarComboCampos();
+llenarComboCampos();
 
-const MostrarCampos = async (posicion) => {
-    const usuarios = await LeerUsuarios();
-    let template = '';
-    for (let i = 0; i < usuarios.length; i++) {
-        let arregloNew = Object.entries(usuarios[i]);
-        for (let j = 0; j < arregloNew.length; j++) {
-            if (j == posicion) {
-                template += `<p>${arregloNew[j][1]}</p>`;
-            }
-        }
+const mostrarCampos = async (valorDinamico, mc) => {
+    let valorMC;
+    if (mc) {
+        valorMC = contenedorCombos.firstChild.value;
     }
+    const usuarios = await leerUsuarios();
+    // let template = '';
+    // for (let i = 0; i < usuarios.length; i++) {
+    //     let arregloNew = Object.entries(usuarios[i]);
+    //     for (let j = 0; j < arregloNew.length; j++) {
+    //         if (j == posicion) {
+    //             template += `<p class='m-0'>${arregloNew[j][1]}</p>`;
+    //         }
+    //     }
+    // }
+    // elementoContainer.innerHTML = template;
+    const template = usuarios.map(usuario => {
+        const {[valorDinamico]: valor} = usuario;
+        // console.log(JSON.stringify(valor));
+        // console.log(obtenerValor(valor, 'street'));
+        if (mc) {
+            return `<p class='m-0'>${obtenerValor(valor, valorMC)}</p>`;
+        } else {
+            return `<p class='m-0'>${valor}</p>`;
+        }
+    }).join('');
     elementoContainer.innerHTML = template;
 }
 
+const obtenerValor = (objeto, valorDinamico) => {
+    const {[valorDinamico]: valor} = objeto;
+    return valor;
+}
+
+// mostrarCampos('address');
+
 btnMostrar.addEventListener('click', () => {
-    MostrarCampos(combo.value);
+    if (Array.from(contenedorCombos.children).length > 0) {
+        mostrarCampos(combo.value, true);
+    } else {
+        mostrarCampos(combo.value, false);
+    }
+});
+
+combo.addEventListener('change', (e) => {
+    crearComboDinamico(e.target.value);
 });
