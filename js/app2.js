@@ -1,6 +1,7 @@
 const elementoContainer = document.getElementById('app');
 const btnMostrar = document.getElementById('btnMostrar');
 const contenedorCombos = document.querySelector('.combos');
+let obj;
 
 const leerUsuarios = async () => {
     const response = await fetch('https://jsonplaceholder.typicode.com/users');
@@ -11,6 +12,8 @@ const leerUsuarios = async () => {
 const crearCombo = async (objeto) => {
     let campos = Object.keys(objeto);
     if (campos.length > 0) {
+        obj = objeto;
+
         const template = '<select class="form-select" onchange="obtenerValorCombo(this)"><option value="0">-- Seleccione --</option>' + campos.map(valor => {
             return `<option value='${valor}'>${valor}</option>`;
         }).join('') + '</select>';
@@ -20,13 +23,13 @@ const crearCombo = async (objeto) => {
 }
 
 async function obtenerValorCombo(valorDinamico) {
-    const usuarios = await leerUsuarios();
-    const {[valorDinamico.value]: valor} = usuarios[0];
+    if (valorDinamico.value == '0') {
+        return;
+    }
+    const {[valorDinamico.value]: valor} = obj;
     if (typeof valor === 'string') {
         return;
     }
-    console.log(valorDinamico.value);
-    console.log(valor);
     crearCombo(valor);
 }
 
